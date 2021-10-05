@@ -20,7 +20,7 @@
   },
   "homepage": "https://gitlab.com/Distributed-Compute-Protocol/dcp-slice-service#readme",
   "dependencies": {
-    "dcp-client": "^4.1.12",
+    "access-log": "^0.4.1",
     "kvin": "^1.2.5"
   }
 }

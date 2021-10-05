@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- @file      browser-test/upload.html
+  --            Web page which allows to exercise the upload method of the slice server.
+  -- @author    Wes Garland, wes@kingsds.network
+  -- @date      Oct 2021
+  -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DCP slice server test: upload</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://portal.distributed.computer/bravojs/bravo.js"></script>
+    <script>'use strict';
+/** Main Module */
+module.declare([], function(require, exports, module)
+{
+  const $ = document.querySelector.bind(document); /* jQuery: The Good Parts */
+  
+  /** Initialize the form */
+  exports.init = async function init()
+  {
+    const fels = $('#display').elements;
+    await exports.change($('#display'));
+    console.log('ready');
+  }
+});
+    </script>
+  </head>
+  <body onload="module.main.init()">
+    <h3>This page lets you upload one element of the input set</h3>
+    <form action="/methods/upload" method="POST">
+      <p><label><span>job identifier:     </span><input type=text   name="job"></label> (optional)</p>
+      <p><label><span>slice identifier:   </span><input type=text   name="slice"></label> (optional)</p>
+      <p><label><span>slice datum:        </span><input type=text   name="datum"></p>
+      <p><button>Upload</button></p>
+    </form>
+   <br><br>
+    <form action="/methods/upload" method="POST">
+      <p><label><span>job identifier:     </span><input type=text   name="job"></label> (optional)</p>
+      <p><label><span>slice identifier:   </span><input type=text   name="slice"></label> (optional)</p>
+      <p><label><span>slice datum:        </span><input type="file"></p>
+      <p><button>Upload</button></p>
+    </form>
+  </body>
+</html>
