@@ -38,7 +38,10 @@ This is a unique identifier for the job. It can be any unique string that descri
 This is a unique identifier for the slice. When used as part of a pattern URI in a `compute.RemoteDataPattern`, it should be the slice number. Slices numbers start a 1 and increment by one for each slice.
 
 ##### datum
-This is the input set datum for this slice.  When this parameter is used, the uploaded datum will not be interpreted in any way; the worker will receive exactly the same bytes for this slice as the dcp-slice-service daemon did. The content-type will also be preserved, however, note that is it possible for both this server and intermediary web servers and caches to transparently alter the content transfer encoding, etc.
+This is the input set datum for this slice.  When this parameter is used, the uploaded datum will not be interpreted in any way; the worker will receive exactly the same bytes for this slice as the dcp-slice-service daemon did. The content-type will also be preserved from the upload, however, note that is it possible for both this server and intermediary web servers and caches to transparently alter the content transfer encoding, etc.
+
+##### contentType
+The content type of the datum, after it has been decoded from the form upload.
 
 #### Response
 ##### Successful
@@ -70,9 +73,26 @@ when the input set is constructed.
 See: methods/upload
 
 ##### data
-Specifies the entire input set for this job and must be an Object which has been serialized either with JSON or KVIN. JSON data must have content-type application/json, where as KVIN data must have content-type application/x-kvin.
+Specifies the entire input set for this job and must be an Object which has been serialized either with JSON or KVIN. Serialization type will be automatically detected, but any data type which requires application/x-kvin output (eg TypeArrays, see table below) must be uploaded in KVIN to preserve type information correctly.
 
-The service will intelligently decide how to store the data on disk, and will serialize it for transmission to the worker using whichever serialization was chosen for the POST operation.
+The service will intelligently decide how to store the data on disk, and will serialize it for transmission to the worker using whatever serialization is appropriate for the content type.
+
+##### contentType
+The content type of the data will be automatically determined after it has been extracted from the uploaded Array, evaluated on
+a per-datum basis. If the initial serialization is done correctly, the JS type used in the uploaded Array will be the samme as the JS
+type the Worker receives as its work function argument (slice datum).
+
+The following table lists the internal representation which is used to achieve this, but should be considered an implementation detail.
+The table is traversed in top-to-bottom order, with the first match being used.
+
+| **JS Type** | **MIME Type** 
+|:------------|:----------------------------------
+| string      | text/plain
+| number < Infinity, > -Infinity | application/x-json
+| number      | application/x-kvin
+| Uint8Array  | application/octet-stream
+| TypedArray  | application/x-kvin
+| other       | application/x-kvin
 
 #### Response
 ##### Successful
@@ -120,7 +140,17 @@ exit
 - systemctl daemon-reload
 - systemctl start whatever this thing is call
 
-## Appendix A - Remote URI Data Movement
+## Appendix A - Manifest
+
+| **Filename**                   | **Description**
+|:-------------------------------|:----------------------------------------------------
+| README.md                      | This document
+| bin/dcp-slice-httpd            | Slice service daemon; web server written in Node.js
+| etc/config.js                  | Configuration object
+| etc/local-config.js            | If present, overrides to etc/config.js
+| browser-test/upload.html       | Web page to upload data into the slice service
+
+## Appendix B - Remote URI Data Movement
 **Note:** It is possible to freely mix remote URI and scheduler-centric URIs (traditional DCP) within the same job, at will, on an ad-hoc basis.
 
 ```mermaid
@@ -160,7 +190,7 @@ scheduler ->> client: result URIs
 
 ```
 
-## Appendix B - Compute API support for Remote Data
+## Appendix C - Compute API support for Remote Data
 * RemoteDataSet
 * RemoteDataPattern
 * JobHandle.setResultStorage
