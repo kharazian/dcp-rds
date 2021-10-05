@@ -1,0 +1,239 @@
+#! /usr/bin/env node
+/**
+ * @file        dcp-slice-httpd - a web service for uploading and downloading
+ *              slice data for and by DCP Workers.
+ *
+ *              This program is a basic web server which receives POST messages
+ *              and hands them off to various methods for processing.
+ *
+ * @author      Wes Garland, wes@kingsds.network
+ * @date        2021
+ */
+'use strict';
+
+const http              = require('http');
+const path              = require('path');
+const querystring       = require('querystring');
+const moduleSystem      = require('module');
+const fs                = require('fs');
+const logging           = require('../lib/logging');
+const config            = require('../etc/config.js');
+
+const { Error }      = require('../lib/error');
+const programPath    = path.dirname(require.main.filename);
+const libexecRequire = (moduleSystem.createRequireFromPath || moduleSystem.createRequire /* node 10 */)(path.resolve(programPath, '../libexec/dummy'));
+const methodNameRE   = /^[-_a-z0-9]+$/i   /* Method names must match this regex */
+
+/** 
+ * Define the CORS headers for all responses. Special use-cases can be addressed in the config module. 
+ */
+const corsHeaders = {
+  'access-control-allow-origin':  '*',
+  'access-control-allow-headers': 'content-type',
+};
+if (config.corsHeaders)
+  Object.assign(corsHeaders, config.corsHeaders);
+
+/**
+ * Load a module from disk which is used to implement the requested method.
+ *
+ * In a debug build, we might reload the module if it has changed on disk. It is plausible
+ * that that behaviour will break a daemon, particularly if the operation or daemon is badly-
+ * written and allows internal module references which are not primitive values to leak out.
+ *
+ * @param {string}      methodName      the name of the method to load; comes from the URL
+ * @returns an exports object
+ */
+function getMethodModule(methodName, recursionDepth)
+{
+  var diskPath;
+  var methodCache = getMethodModule.cache; /* holds cached method modules to avoid repeated disk lookups */
+
+  if (!methodCache)
+    methodCache = getMethodModule.cache = {};
+  
+  if (config.mode === 'debug' && methodCache[methodName])
+  {
+    let nodeModuleCache = require.cache;
+    let sb;
+    
+    if (recursionDepth > 5)
+      throw new Error(`Module for method ${methodName} keeps changing faster than we can load it!`);
+    
+    diskPath = methodCache[methodName].diskPath;
+    sb = fs.statSync(diskPath);
+    
+    if (false
+        || +sb.mtime !== +methodCache[methodName].mtime
+        ||  sb.dev   !==  methodCache[methodName].dev
+        ||  sb.ino   !==  methodCache[methodName].ino
+        ||  sb.size  !==  methodCache[methodName].size)
+    {
+      /* module has changed on disk: play with fire */
+      delete nodeModuleCache[diskPath];
+      delete methodCache[methodName];
+      console.debug('Reloading module', diskPath);
+    }
+  }
+
+  if (!methodCache[methodName])
+  {
+    if (!methodNameRE.test(methodName))
+      throw new DCPError(`Method '${methodName}' is invalid.`, 'INVALID_METHOD');
+
+    try
+    {
+      diskPath = libexecRequire.resolve(`./${methodName}`);
+      config.debug && console.debug('Loading module', diskPath);
+    }
+    catch(e)
+    {
+      if (e.code === 'MODULE_NOT_FOUND')
+        return null;
+      throw e;
+    }
+
+    const entry = { diskPath };
+    if (dcpConfig.build === 'debug')
+      Object.assign(entry, fs.statSync(diskPath));
+    entry.exports = require(diskPath);
+    methodCache[methodName] = entry;
+    if (dcpConfig.build === 'debug')
+      return getMethodModule(methodName, (+recursionDepth || 0) + 1);
+  }
+
+  return methodCache[methodName].exports;
+}
+
+/**
+ * Handle the data in a fully-received request, emitting a response. The response
+ * always contains a 'success' property which is true when the operation is successful;
+ * if it is false, we do our best to attach an error object to describing the 
+ * exception that caused it fail. In either case, we return HTTP status code 200.
+ *
+ * The actual meat-and-potates of the operation is handled by libexec/operation-name.js,
+ * where operation-name is given by the path component of the request. This module is
+ * loaded on demand, and the 'entrypoint' function is run for each post request.  
+ *
+ *
+ * @param {object}      request         the HTTP request object
+ * @param {object}      response        the HTTP respsonse object
+ * @param {Buffer}      requestBody     the complete message body from the HTTP request
+ */
+async function handleRequestPostData(request, response, requestBody)
+{
+  var responseBody = { success: false };
+
+  try
+  {
+    let rb;
+    const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'');
+    const methodModule = config.getMethodModule(methodName);
+    const postData = querystring.parse(requestBody.toString('utf-8'));
+
+    tlog('ipaddr', dcpHttp.ipAddress(request.headers, request.socket.address().address));
+    if (!request.url.startsWith(config.listen.pathname))
+      throw new Error(`invalid request url: ${request.url} (not in ${config.listen.pathname})`, 'INVALID_URL');
+
+    setCorsHeaders(response);   
+    rb = await methodModule.entrypoint(request, response, postData);
+
+    Object.assign(responseBody, rb);
+    if (rb.error instanceof Error)
+    {
+      responseBody.message = rb.error.message;
+      responseBody.name    = rb.error.name;
+      responseBody.stack   = rb.error.stack;
+    }
+  }
+  catch(e)
+  {
+    let error = {};
+
+    console.error(e);
+    try
+    {
+      error.message = e.message;
+      error.name    = e.name;
+      error.stack   = e.stack;
+
+      responseBody.error = error;
+    } catch(e) {};
+  }
+
+  response.setHeader('content-type', 'application/json');
+  response.end(JSON.stringify(responseBody));
+}
+
+/**
+ * Set the CORS headers for the method.  Called automatically for POST and OPTIONS requests.
+ */
+function setCorsheaders(response)
+{
+  for (let header in corsHeaders)
+    response.setHeader(header, corsHeaders[header]);
+}
+
+/** Handle an HTTP request; assembles request chunks together and calls handleRequestPostData() */
+function handleRequest(request, response)
+{
+  const chunks = [];
+  const requestMethod = request.method.toUpperCase();
+  
+  if (requestMethod === 'POST')
+  {
+    request.on('data', chunk => chunks.push(chunk));
+    request.on('end', () => handleRequestPostData(request, response, Buffer.concat(chunks)));
+    return;
+  }
+
+  if (requestMethod === 'OPTIONS')
+  {
+    setCorsHeaders(response);
+    response.writeHead(200);
+    response.end();
+    return;
+  }
+
+  console.error('Invalid request method', request.method, 'for', request.url);
+}
+
+
+/** Main program entry point 
+ *
+ * This service will use the pathName component of the URL to determine
+ * the name of the method module to load an run. If the listen URL is X/Y/Z and the request arrives on
+ * X/Y/Z/B, we will load module libexec/A/B, where A is the name of the program.
+ *
+ * Each method module must have an export named `entrypoint`; this function will be 
+ * invoked on each request with the following arguments
+ *  - request:  the incoming http request
+ *  - response: the outgoing http response
+ *  - postData: the POST data that was sent with the incoming request
+ * The function must also return an object, or a promise which resolves to an object. This object will
+ * be stringified and sent as the response body if the function runs without throwing/rejecting. When
+ * the operation is successful, this object should include status=true.
+ *
+ * A method module may also have exports named after individual HTTP methods.
+ * 
+ */
+function main()
+{
+  const server = http.createServer(handleRequest);
+  var   listenOpts = {
+    host: config.listen.hostname,
+    port: config.listen.port
+  };
+
+  if (listenOpts.host === 'inaddr_any')
+    delete listenOpts.host;
+
+  function serviceReadyHandler()
+  {
+    console.log('dcp-slice-httpd listening on', server._connectionKey);
+  }
+  
+  server.listen(listenOpts, serviceReadyHandler);
+  config.debug && console.debug('dcp-slice-httpd: initialized service on', config.listen);
+}
+main();
