@@ -80,6 +80,7 @@ The service will intelligently decide how to store the data on disk, and will se
 |:---------|:------------------------------------------------------------------------------
 | success  | true
 | pattern  | a pattern string which can be used to retrieve this data, suitable for use with compute::RemoteDataSet
+| length   | number of slices in the request
 
 ##### Failure
 | Property | Value
