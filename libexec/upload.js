@@ -13,7 +13,7 @@ const config = require('../etc/config');
  *
  * @param {object} request      The node httpserver object representing the incoming HTTP request
  * @param {object} response     The node httpserver object representing the outgoing HTTP response
- * @param {object} postData     An object representing the POST data that was sent with the HTTP request;
+ * @param {object} query        An object representing the POST data that was sent with the HTTP request;
  *                              the query has been unescaped and turned back into raw data, with the
  *                              query parameter becoming the JS object key. Possible post values are:
  *                                      job             unique identifier for the job
@@ -28,15 +28,18 @@ const config = require('../etc/config');
  *                      error   {object}        optional instance of Error. If present, may have also have non-standard 
  *                                              stack and code properties.
  */
-async function upload(request, response, postData)
+async function upload(request, response, query)
 {
-  var job         = postData.job   || utils.randomId();
-  var slice       = postData.slice || utils.randomId();
-  var datum       = postData.datum;
-  var contentType = postData.contentType;
+  var job         = query.job   || utils.randomId();
+  var slice       = query.slice || utils.randomId();
+  var datum       = query.datum;
+  var contentType = query.contentType;
   var origin      = config.origin || utils.getRequestUrl(request).origin;
   var href        = `${origin}/methods/download/jobs/${job}/${slice}`;
 
+  if (!Object.hasOwnProperty.call(query, 'datum'))
+    throw new Error('query missing datum');
+  
   await utils.writeSlice(datum, job, slice, contentType)
 
   return { success: true, href };

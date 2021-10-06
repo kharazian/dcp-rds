@@ -107,18 +107,9 @@ function getMethodModule(methodName, recursionDepth)
  */
 function getMethodModule_byRequest(request)
 {
-  const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'');
+  const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'').replace(/\/.*$/, '');
 
   return getMethodModule(methodName);
-}
-
-/**
- * Set the CORS headers for the method.  Called automatically for POST and OPTIONS requests.
- */
-function setCorsHeaders(response)
-{
-  for (let header in corsHeaders)
-    response.setHeader(header, corsHeaders[header]);
 }
 
 /**
@@ -137,6 +128,12 @@ function setCorsHeaders(response)
  */
 async function handleRequest(request, response, requestBody)
 {
+  function setCorsHeaders(response)
+  {
+    for (let header in corsHeaders)
+      response.setHeader(header, corsHeaders[header]);
+  }
+
   var rb, responseBody = { success: false };
 
   (config.debug) && console.debug(request.method, utils.getRequestUrl(request).href);
@@ -146,8 +143,8 @@ async function handleRequest(request, response, requestBody)
   {
     const methodModule = getMethodModule_byRequest(request);
     let query = false;
-    
-    switch(request.method)
+
+    switch(request.method.toLowerCase())
     {
       case 'options':
         response.writeHead(200);
@@ -155,17 +152,24 @@ async function handleRequest(request, response, requestBody)
         return;
       
       case 'post':
-        query = decodeRequest_post(request);
+        query = await decodeRequest_post(request);
         break;
+
       case 'get':
         query = decodeRequest_get(request);
         break;
+
+      default:
+        throw new Error('Invalid request method ', request.method);
     }
 
     if (!request.url.startsWith(config.listen.pathname))
       rb = { error: new Error(`invalid request url: ${request.url} (not in ${config.listen.pathname})`, 'INVALID_URL') }
     else
       rb = await methodModule.entrypoint(request, response, query);
+
+    if (rb === false) /* method has already handled the request itself */
+      return;
     
     Object.assign(responseBody, rb);
     if (rb.error instanceof Error)
@@ -198,27 +202,37 @@ async function handleRequest(request, response, requestBody)
   response.end(JSON.stringify(responseBody));
 }
 
-function assemblePostData(request)
+/**
+ * Handle the data in a fully-received GET request and return it as an Object.
+ *
+ * @param {object}      request         the HTTP request object
+ * @param {object}      response        the HTTP respsonse object
+ */
+function decodeRequest_get(request)
 {
-  return new Promise(function assemblePostDataInner(resolve, reject) {
-    var chunks = [];
+  var rUrl = utils.getRequestUrl(request);
 
-    request.on('data', chunk => chunks.push(chunk));
-    request.on('end', () => resolve(Buffer.concat(chunks)));
-  });
+  return rUrl.searchParams;
 }
 
 /**
- * Handle the data in a fully-received POST request, emitting a response. The response
- * always contains a 'success' property which is true when the operation is successful;
- * if it is false, we do our best to attach an error object to describing the 
- * exception that caused it fail. In either case, we return HTTP status code 200.
+ * Handle the data in a fully-received POST request and return it as an Object.
  *
  * @param {object}      request         the HTTP request object
  * @param {object}      response        the HTTP respsonse object
  */
 async function decodeRequest_post(request)
 {
+  function assemblePostData(request)
+  {
+    return new Promise(function assemblePostDataInner(resolve, reject) {
+      var chunks = [];
+
+      request.on('data', chunk => chunks.push(chunk));
+      request.on('end', () => resolve(Buffer.concat(chunks)));
+    });
+  }
+
   var postData;
   var requestBody = await assemblePostData(request);
   
