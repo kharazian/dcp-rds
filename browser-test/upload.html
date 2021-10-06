@@ -10,6 +10,7 @@
     <title>DCP slice server test: upload</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://portal.distributed.computer/bravojs/bravo.js"></script>
+    <base href="http://wes.office.kingsds.network:3521">
   </head>
   <body onload="module.main.init()">
     <h3>This page lets you upload one element of the input set</h3>
@@ -17,14 +18,14 @@
       <p><label><span>job identifier:     </span><input type=text   name="job"></label> (optional)</p>
       <p><label><span>slice identifier:   </span><input type=text   name="slice"></label> (optional)</p>
       <p><label><span>slice datum:        </span><textarea name="datum"></textarea></p>
-      <p><select name="contentType"></select> <button>Upload</button></p>
+      <p><label><span>content type:       </span><select name="contentType"></select> <button>Upload</button></p>
     </form>
-   <br><br>
+    <br><br>
     <form action="/methods/upload" method="POST">
       <p><label><span>job identifier:     </span><input type=text   name="job"></label> (optional)</p>
       <p><label><span>slice identifier:   </span><input type=text   name="slice"></label> (optional)</p>
       <p><label><span>slice datum:        </span><input type="file"></p>
-      <p><select name="contentType"></select> <button>Upload</button></p>
+      <p><label><span>content type:       </span><select name="contentType"></select> <button>Upload</button></p>
     </form>
   </body>
   <script>'use strict';

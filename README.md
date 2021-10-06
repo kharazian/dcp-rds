@@ -88,7 +88,7 @@ The table is traversed in top-to-bottom order, with the first match being used.
 | **JS Type** | **MIME Type** 
 |:------------|:----------------------------------
 | string      | text/plain
-| number < Infinity, > -Infinity | application/x-json
+| number &isinv; (-Infinity, Infinity) | application/x-json
 | number      | application/x-kvin
 | Uint8Array  | application/octet-stream
 | TypedArray  | application/x-kvin
