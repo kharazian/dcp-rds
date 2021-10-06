@@ -14,17 +14,17 @@
   </head>
   <body onload="module.main.init()">
     <h3>This page lets you upload one element of the input set</h3>
-    <form action="/methods/upload" method="POST">
-      <p><label><span>job identifier:     </span><input type=text   name="job"></label> (optional)</p>
-      <p><label><span>slice identifier:   </span><input type=text   name="slice"></label> (optional)</p>
-      <p><label><span>slice datum:        </span><textarea name="datum"></textarea></p>
-      <p><label><span>content type:       </span><select name="contentType"></select> <button>Upload</button></p>
+    <form action="/methods/upload" method="post">
+      <p><label><span>job identifier:     </span><input type=text name="job"></label>   (optional)</p>
+      <p><label><span>slice identifier:   </span><input type=text name="slice"></label> (optional)</p>
+      <p><label><span>slice datum:        </span><textarea        name="datum"></textarea></p>
+      <p><label><span>content type:       </span><select          name="contentType"></select> <button>Upload</button></p>
     </form>
     <br><br>
-    <form action="/methods/upload" method="POST">
-      <p><label><span>job identifier:     </span><input type=text   name="job"></label> (optional)</p>
-      <p><label><span>slice identifier:   </span><input type=text   name="slice"></label> (optional)</p>
-      <p><label><span>slice datum:        </span><input type="file"></p>
+    <form action="/methods/upload" method="post" enctype="multipart/form-data">
+      <p><label><span>job identifier:     </span><input type=text name="job"></label> (optional)</p>
+      <p><label><span>slice identifier:   </span><input type=text name="slice"></label> (optional)</p>
+      <p><label><span>slice datum:        </span><input type=file name="datum"></p>
       <p><label><span>content type:       </span><select name="contentType"></select> <button>Upload</button></p>
     </form>
   </body>

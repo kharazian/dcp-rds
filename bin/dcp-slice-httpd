@@ -18,6 +18,7 @@ const moduleSystem      = require('module');
 const fs                = require('fs');
 const logging           = require('../lib/logging');
 const config            = require('../etc/config.js');
+const multipartFormdata = require('multipart-formdata');
 
 const { Error }      = require('../lib/error');
 const programPath    = path.dirname(require.main.filename);
@@ -129,7 +130,30 @@ async function handleRequestPostData(request, response, requestBody)
     let rb;
     const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'');
     const methodModule = getMethodModule(methodName);
-    const postData = querystring.parse(requestBody.toString('utf-8'));
+    let postData;
+
+    if (!request.headers['content-type'].startsWith('multipart/form-data'))
+      postData = querystring.parse(requestBody.toString('utf-8'));
+    else
+    {
+      /* Synthesize our querystring from multipart/formdata. Any uploaded file becomes a buffer */
+      let boundary = multipartFormdata.getBoundary(request.headers['content-type']);
+      let mpData = multipartFormdata.parse(requestBody, boundary);
+
+      postData = {};
+
+      for (let part of mpData)
+      {
+        if (!part.type)
+          postData[part.name] = part.field;
+        else
+        {
+          /* file upload */
+          config.debug && console.debug('Received uploaded file', part.filename, 'content-type', part.type);
+          postData[part.name] = part.data;
+        }
+      } 
+    }
 
 //    tlog('ipaddr', dcpHttp.ipAddress(request.headers, request.socket.address().address));
     setCorsHeaders(response);
@@ -174,7 +198,7 @@ function handleRequest(request, response)
 {
   const chunks = [];
   const requestMethod = request.method.toUpperCase();
-  
+
   if (requestMethod === 'POST')
   {
     request.on('data', chunk => chunks.push(chunk));

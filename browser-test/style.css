@@ -1,0 +1,57 @@
+BODY HTML 
+{
+  height: 100%;
+  width: 100%;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: clip;
+}
+
+HTML
+{
+  font-family: Arial, Helvetica;
+  font-size: 20px;
+}
+
+BODY > FORM
+{
+  display: inline-block;
+  border: 1px solid grey;
+  border-radius: 0.2em;
+  padding: 0.4em;
+  background-color: #ddd;
+  min-width: 50%;
+}
+
+BODY > FORM INPUT,
+BODY > FORM TEXTAREA
+{
+  font-family: robot, ubuntu mono, monospace, courier new;
+  font-size: 0.8em;
+  color: black;
+  width: 30em;
+}
+
+BODY > FORM INPUT:read-only,
+BODY > FORM TEXTAREA:read-only
+{
+  color: #777;
+}
+
+BODY > FORM LABEL SPAN
+{
+  display: inline-block;
+  width: 8em;
+  text-align: right;
+  padding-right: 0.5em;
+  margin-right: 0.1em;
+  background-color: #eee;
+  vertical-align: top;
+}
+
+BODY > FORM P
+{
+  margin: 0;
+}
+
