@@ -6,9 +6,12 @@
  * @date        Oct 2021
  */
 
-exports.debug  = false;
-exports.mode   = 'release';
-exports.listen = new URL('http://localhost:3521/');
+const path = require('path');
+
+exports.debug      = false;
+exports.mode       = 'release';
+exports.listen     = new URL('http://localhost:3521/');
+exports.storageDir = path.resolve(path.dirname(require.main.filename), '../storage');
 
 /************ load in a local config, if present, which can override properties in this file ************/
 try

@@ -151,6 +151,8 @@ async function handleRequestPostData(request, response, requestBody)
           /* file upload */
           config.debug && console.debug('Received uploaded file', part.filename, 'content-type', part.type);
           postData[part.name] = part.data;
+          if (!postData.contentType)
+            postData.contentType = part.type; /* inherit content-type from file if otherwise unspecified */
         }
       } 
     }
@@ -251,7 +253,8 @@ function main()
   {
     console.log('dcp-slice-httpd listening on', server._connectionKey);
   }
-  
+
+  fs.mkdirSync(config.storageDir, { recursive: true }); /* fail early */
   server.listen(listenOpts, serviceReadyHandler);
   config.debug && console.debug('dcp-slice-httpd: initialized service on', config.listen.href);
 }

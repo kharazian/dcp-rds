@@ -4,9 +4,10 @@
  * @author      Wes Garland, wes@kingsds.network
  * @date        Oct 2021
  */
+'use strict';
 
 const utils = require('../lib/utils');
-    
+const config = require('../etc/config');    
 /**
  * Method entrypoint - receive content from the user and write it to disk.
  *
@@ -19,15 +20,18 @@ const utils = require('../lib/utils');
  * @returns An object with { success: true } upon success, which is sent back to the uploader as 
  *          JSON data.
  */
-function upload(request, response, postData)
+async function upload(request, response, postData)
 {
-  let job         = postData.job   || utils.randomId();
-  let slice       = postData.slice || utils.randomId();
-  let datum       = postData.datum;
-  let contentType = postData.contentType;
-  
-  debugger;
-  return { success: true, datum: typeof datum };
+  var job         = postData.job   || utils.randomId();
+  var slice       = postData.slice || utils.randomId();
+  var datum       = postData.datum;
+  var contentType = postData.contentType;
+  var origin      = config.origin || request.headers.origin;
+  var href        = `${origin}/methods/download/jobs/${job}/${slice}`;
+
+  await utils.writeSlice(datum, job, slice, contentType)
+
+  return { success: true, href };
 }
 
 exports.entrypoint = upload;
