@@ -13,12 +13,13 @@
 
 const http              = require('http');
 const path              = require('path');
-const querystring       = require('querystring');
 const moduleSystem      = require('module');
 const fs                = require('fs');
-const logging           = require('../lib/logging');
-const config            = require('../etc/config.js');
+const querystring       = require('querystring');
 const multipartFormdata = require('multipart-formdata');
+const logging           = require('../lib/logging');
+const utils             = require('../lib/utils');
+const config            = require('../etc/config.js');
 
 const { Error }      = require('../lib/error');
 const programPath    = path.dirname(require.main.filename);
@@ -98,6 +99,20 @@ function getMethodModule(methodName, recursionDepth)
 }
 
 /**
+ * Load a module from disk which is used to implement the requested method.
+ * @see getMethodModule()
+ *
+ * @param {object}      request         the HTTP request object
+ * @returns an exports object
+ */
+function getMethodModule_byRequest(request)
+{
+  const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'');
+
+  return getMethodModule(methodName);
+}
+
+/**
  * Set the CORS headers for the method.  Called automatically for POST and OPTIONS requests.
  */
 function setCorsHeaders(response)
@@ -107,8 +122,8 @@ function setCorsHeaders(response)
 }
 
 /**
- * Handle the data in a fully-received request, emitting a response. The response
- * always contains a 'success' property which is true when the operation is successful;
+ * Handle a fully-received request, emitting a response. The response always
+ * contains a 'success' property which is true when the operation is successful;
  * if it is false, we do our best to attach an error object to describing the 
  * exception that caused it fail. In either case, we return HTTP status code 200.
  *
@@ -116,54 +131,42 @@ function setCorsHeaders(response)
  * where operation-name is given by the path component of the request. This module is
  * loaded on demand, and the 'entrypoint' function is run for each post request.  
  *
- *
  * @param {object}      request         the HTTP request object
  * @param {object}      response        the HTTP respsonse object
  * @param {Buffer}      requestBody     the complete message body from the HTTP request
  */
-async function handleRequestPostData(request, response, requestBody)
+async function handleRequest(request, response, requestBody)
 {
-  var responseBody = { success: false };
+  var rb, responseBody = { success: false };
+
+  (config.debug) && console.debug(request.method, utils.getRequestUrl(request).href);
+  setCorsHeaders(response);
 
   try
   {
-    let rb;
-    const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'');
-    const methodModule = getMethodModule(methodName);
-    let postData;
-
-    if (!request.headers['content-type'].startsWith('multipart/form-data'))
-      postData = querystring.parse(requestBody.toString('utf-8'));
-    else
+    const methodModule = getMethodModule_byRequest(request);
+    let query = false;
+    
+    switch(request.method)
     {
-      /* Synthesize our querystring from multipart/formdata. Any uploaded file becomes a buffer */
-      let boundary = multipartFormdata.getBoundary(request.headers['content-type']);
-      let mpData = multipartFormdata.parse(requestBody, boundary);
-
-      postData = {};
-
-      for (let part of mpData)
-      {
-        if (!part.type)
-          postData[part.name] = part.field;
-        else
-        {
-          /* file upload */
-          config.debug && console.debug('Received uploaded file', part.filename, 'content-type', part.type);
-          postData[part.name] = part.data;
-          if (!postData.contentType)
-            postData.contentType = part.type; /* inherit content-type from file if otherwise unspecified */
-        }
-      } 
+      case 'options':
+        response.writeHead(200);
+        response.end();
+        return;
+      
+      case 'post':
+        query = decodeRequest_post(request);
+        break;
+      case 'get':
+        query = decodeRequest_get(request);
+        break;
     }
 
-//    tlog('ipaddr', dcpHttp.ipAddress(request.headers, request.socket.address().address));
-    setCorsHeaders(response);
     if (!request.url.startsWith(config.listen.pathname))
       rb = { error: new Error(`invalid request url: ${request.url} (not in ${config.listen.pathname})`, 'INVALID_URL') }
     else
-      rb = await methodModule.entrypoint(request, response, postData);
-
+      rb = await methodModule.entrypoint(request, response, query);
+    
     Object.assign(responseBody, rb);
     if (rb.error instanceof Error)
     {
@@ -195,32 +198,60 @@ async function handleRequestPostData(request, response, requestBody)
   response.end(JSON.stringify(responseBody));
 }
 
-/** Handle an HTTP request; assembles request chunks together and calls handleRequestPostData() */
-function handleRequest(request, response)
+function assemblePostData(request)
 {
-  const chunks = [];
-  const requestMethod = request.method.toUpperCase();
+  return new Promise(function assemblePostDataInner(resolve, reject) {
+    var chunks = [];
 
-  if (requestMethod === 'POST')
-  {
     request.on('data', chunk => chunks.push(chunk));
-    request.on('end', () => handleRequestPostData(request, response, Buffer.concat(chunks)));
-    return;
-  }
-
-  if (requestMethod === 'OPTIONS')
-  {
-    setCorsHeaders(response);
-    response.writeHead(200);
-    response.end();
-    return;
-  }
-
-  console.error('Invalid request method', request.method, 'for', request.url);
+    request.on('end', () => resolve(Buffer.concat(chunks)));
+  });
 }
 
+/**
+ * Handle the data in a fully-received POST request, emitting a response. The response
+ * always contains a 'success' property which is true when the operation is successful;
+ * if it is false, we do our best to attach an error object to describing the 
+ * exception that caused it fail. In either case, we return HTTP status code 200.
+ *
+ * @param {object}      request         the HTTP request object
+ * @param {object}      response        the HTTP respsonse object
+ */
+async function decodeRequest_post(request)
+{
+  var postData;
+  var requestBody = await assemblePostData(request);
+  
+  if (!request.headers['content-type'].startsWith('multipart/form-data'))
+    postData = querystring.parse(requestBody.toString('utf-8'));
+  else
+  {
+    /* Synthesize our querystring from multipart/formdata. Any uploaded file becomes a buffer */
+    let boundary = multipartFormdata.getBoundary(request.headers['content-type']);
+    let mpData = multipartFormdata.parse(requestBody, boundary);
 
-/** Main program entry point 
+    postData = {};
+
+    for (let part of mpData)
+    {
+      if (!part.type)
+        postData[part.name] = part.field;
+      else
+      {
+        /* file upload */
+        config.debug && console.debug('Received uploaded file', part.filename, 'content-type', part.type);
+        postData[part.name] = part.data;
+        if (!postData.contentType)
+          postData.contentType = part.type; /* inherit content-type from file if otherwise unspecified */
+      }
+    } 
+  }
+
+  return postData;
+}
+
+/**
+ * Main program entry point
  *
  * This service will use the pathName component of the URL to determine
  * the name of the method module to load an run. If the listen URL is X/Y/Z and the request arrives on
@@ -230,7 +261,8 @@ function handleRequest(request, response)
  * invoked on each request with the following arguments
  *  - request:  the incoming http request
  *  - response: the outgoing http response
- *  - postData: the POST data that was sent with the incoming request
+ *  - query:    the decoded query that was sent with the incoming request, as a key-value-pair object
+ *
  * The function must also return an object, or a promise which resolves to an object. This object will
  * be stringified and sent as the response body if the function runs without throwing/rejecting. When
  * the operation is successful, this object should include status=true.
@@ -249,6 +281,9 @@ function main()
   if (listenOpts.host === 'inaddr_any')
     delete listenOpts.host;
 
+  if (!config.debug && process.env.DCP_DEBUG)
+    config.debug = true;
+  
   function serviceReadyHandler()
   {
     console.log('dcp-slice-httpd listening on', server._connectionKey);

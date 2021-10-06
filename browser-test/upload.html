@@ -36,14 +36,22 @@ module.declare([], function(require, exports, module)
   {
     var els = document.querySelectorAll('SELECT[name="contentType"]');
 
+    /* Append usual list of content type types to each select element */
     for (let el of els)
     {
-    console.log(el);
       for (let ct of ['text/plain', 'application/json', 'application/x-kvin', 'application/octet-stream'])
       {
         let option = new Option(ct);
         el.options[el.options.length++] = option;
       }
+    }
+
+    /* Append <inherit from file> content type to select elements in forms with file upload capability */
+    els = document.querySelector('FORM[enctype="multipart/form-data"] SELECT');
+    for (let el of els)
+    {
+      let option = new Option('<inherit from file>', '');
+      el.options[el.options.length++] = option;
     }
   }
 });
