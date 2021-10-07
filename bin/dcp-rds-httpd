@@ -1,10 +1,10 @@
 #! /usr/bin/env node
 /**
- * @file        dcp-slice-httpd - a web service for uploading and downloading
- *              slice data for and by DCP Workers.
+ * @file        dcp-rds-httpd - a web service for uploading and downloading
+ *              data for and by DCP Workers.
  *
- *              This program is a basic web server which receives POST messages
- *              and hands them off to various methods for processing.
+ *              This program is a basic web server which receives GET and POST 
+ *              messages and hands them off to various methods for processing.
  *
  * @author      Wes Garland, wes@kingsds.network
  * @date        2021
@@ -300,11 +300,11 @@ function main()
   
   function serviceReadyHandler()
   {
-    console.log('dcp-slice-httpd listening on', server._connectionKey);
+    console.log('dcp-rds-httpd listening on', server._connectionKey);
   }
 
   fs.mkdirSync(config.storageDir, { recursive: true }); /* fail early */
   server.listen(listenOpts, serviceReadyHandler);
-  config.debug && console.debug('dcp-slice-httpd: initialized service on', config.listen.href);
+  config.debug && console.debug('dcp-rds-httpd: initialized service on', config.listen.href);
 }
 main();

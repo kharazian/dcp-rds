@@ -1,24 +1,41 @@
 {
-  "name": "dcp-slice-service",
+  "name": "dcp-rds",
   "version": "1.0.0",
-  "description": "DCP Slice Service reference implementation",
-  "main": "dcp-slice-httpd",
+  "description": "DCP Remote Data Service reference implementation",
+  "main": "bin/dcp-rds-httpd",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postpublish": "PACKAGE_VERSION=$(cat package.json | grep \\\"version\\\" | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]') && git tag v$PACKAGE_VERSION && git push --tags"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/Distributed-Compute-Protocol/dcp-slice-service.git"
+    "url": "git+https://gitlab.com/Distributed-Compute-Protocol/dcp-rds.git"
   },
   "keywords": [
     "dcp"
   ],
-  "author": "Kings Distributed Systems, Ltd.",
+  "author": "Wes Garland <wes@kingsds.network>",
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/Distributed-Compute-Protocol/dcp-slice-service/issues"
+    "url": "https://gitlab.com/Distributed-Compute-Protocol/dcp-rds/issues"
   },
-  "homepage": "https://gitlab.com/Distributed-Compute-Protocol/dcp-slice-service#readme",
+  "homepage": "https://gitlab.com/Distributed-Compute-Protocol/dcp-rds#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "files": [
+    "*.md",
+    "*.js",
+    "bin",
+    "lib",
+    "etc",
+    "libexec",
+    "browser-test"
+  ],
+  "directories": {
+    "example": "examples",
+    "lib": "lib",
+    "test": "test"
+  },
   "dependencies": {
     "access-log": "^0.4.1",
     "kvin": "^1.2.5",

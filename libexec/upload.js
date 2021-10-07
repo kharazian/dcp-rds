@@ -1,6 +1,6 @@
 /**
  * @file        libexec/upload.js
- *              /method/upload method for dcp-slice-httpd server
+ *              /method/upload method for dcp-rds-httpd server
  * @author      Wes Garland, wes@kingsds.network
  * @date        Oct 2021
  */
@@ -17,30 +17,34 @@ const config = require('../etc/config');
  *                              the query has been unescaped and turned back into raw data, with the
  *                              query parameter becoming the JS object key. Possible post values are:
  *                                      job             unique identifier for the job
- *                                      slice           unique identifier for the slice
- *                                      datum           input set datum for this slice
+ *                                      element         unique identifier for the element
+ *                                      elementType     the type of element (eg slice, argument, result)
+ *                                      content         content of this element
  *                                      contentType     MIME type of the uploaded content
- *
  *
  * @returns {object} An object, which is sent back with the response in JSON, with the following properties:
  *                      success {boolean}       true if successful, false if error
- *                      href    {string}        a full URL which gives the path from which this datum may be downloaded
+ *                      href    {string}        a full URL which gives the path from which this content may be downloaded
  *                      error   {object}        optional instance of Error. If present, may have also have non-standard 
  *                                              stack and code properties.
  */
 async function upload(request, response, query)
 {
-  var job         = query.job   || utils.randomId();
-  var slice       = query.slice || utils.randomId();
-  var datum       = query.datum;
+  var job         = query.job     || utils.randomId();
+  var element     = query.element || utils.randomId();
+  var elementType = query.elementType;
+  var content     = query.content;
   var contentType = query.contentType;
   var origin      = config.origin || utils.getRequestUrl(request).origin;
-  var href        = `${origin}/methods/download/jobs/${job}/${slice}`;
+  var href        = `${origin}/methods/download/jobs/${job}/${elementType}/${element}`;
 
-  if (!Object.hasOwnProperty.call(query, 'datum'))
-    throw new Error('query missing datum');
+  if (!Object.hasOwnProperty.call(query, 'content'))
+    throw new Error('query missing content');
+
+  if (!elementType)
+    throw new Error('Query missing elementType');
   
-  await utils.writeSlice(datum, job, slice, contentType)
+  await utils.storeContent(content, contentType, job, elementType, element);
 
   return { success: true, href };
 }
