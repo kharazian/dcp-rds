@@ -9,12 +9,12 @@
     <meta charset="utf-8">
     <title>DCP remote data service test: upload</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://portal.distributed.computer/bravojs/bravo.js"></script>
-    <base href="http://wes.office.kingsds.network:3521">
+    <base href="http://localhost:3521/">
   </head>
-  <body onload="module.main.init()">
+  <body onload="init()">
     <h3>This page lets you upload one element of the input set</h3>
-    <form action="/methods/upload" method="post" target="output">
+    <p>Endpoint: <input id="endpoint" size=40 value=""></p>
+    <form method="post" target="output">
       <p><label><span>job identifier:     </span><input type=text name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text name="element"></label> (optional)</p>
       <p><label><span>element type:       </span><select          name="elementType"></select></label></p>
@@ -22,7 +22,7 @@
       <p><label><span>content type:       </span><select          name="contentType"></select> <button>Upload</button></p>
     </form>
     <br><br>
-    <form action="/methods/upload" method="post" enctype="multipart/form-data" target="output">
+    <form method="post" enctype="multipart/form-data" target="output">
       <p><label><span>job identifier:     </span><input type=text name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text name="element"></label> (optional)</p>
       <p><label><span>element type:       </span><select          name="elementType"></select></label></p>
@@ -34,43 +34,55 @@
     <iframe name="output" width="80%"></iframe>
   </body>
   <script>'use strict';
-/** Main Module */
-module.declare([], function(require, exports, module)
+function updateFormActions()
 {
-  exports.init = function init()
+  var els;
+  console.log('updaying');
+  els = document.querySelectorAll('FORM');
+  for (let el of els)
+    el.action = document.getElementById('endpoint').value;
+}
+    
+/** Main Program Entrypoint */
+function init()
+{
+  var els, ep;
+  
+  /* Initialize endpoint based on location of this page */
+  ep = document.querySelector('INPUT#endpoint');
+  ep.value = document.baseURI + 'methods/upload';
+  ep.addEventListener('change', updateFormActions);
+  updateFormActions();
+  
+  /* Append usual list of content type types to each select element */
+  els = document.querySelectorAll('SELECT[name="contentType"]');
+  for (let el of els)
   {
-    var els = document.querySelectorAll('SELECT[name="contentType"]');
-
-    /* Append usual list of content type types to each select element */
-    for (let el of els)
+    for (let ct of ['text/plain', 'application/json', 'application/x-kvin', 'application/octet-stream'])
     {
-      for (let ct of ['text/plain', 'application/json', 'application/x-kvin', 'application/octet-stream'])
-      {
-        let option = new Option(ct);
-        el.options[el.options.length++] = option;
-      }
-    }
-
-    els = document.querySelectorAll('SELECT[name="elementType"]');
-
-    for (let el of els)
-    {
-      /* Append usual list of element types to each select element */
-      for (let et of ['slice', 'result', 'argument', 'work-function'])
-      {
-        let option = new Option(et);
-        el.options[el.options.length++] = option;
-      }
-    }
-
-    /* Append <inherit from file> content type to select elements in forms with file upload capability */
-    els = document.querySelectorAll('FORM[enctype="multipart/form-data"] SELECT[name="contentType"]');
-    for (let el of els)
-    {
-      let option = new Option('<inherit from file>', '');
+      let option = new Option(ct);
       el.options[el.options.length++] = option;
     }
   }
-});
-    </script>
+
+  /* Append usual list of element types to each select element */
+  els = document.querySelectorAll('SELECT[name="elementType"]');
+  for (let el of els)
+  {
+    for (let et of ['slice', 'result', 'argument', 'work-function'])
+    {
+      let option = new Option(et);
+      el.options[el.options.length++] = option;
+    }
+  }
+
+  /* Append <inherit from file> content type to select elements in forms with file upload capability */
+  els = document.querySelectorAll('FORM[enctype="multipart/form-data"] SELECT[name="contentType"]');
+  for (let el of els)
+  {
+    let option = new Option('<inherit from file>', '');
+    el.options[el.options.length++] = option;
+  }
+}
+  </script>
 </html>
