@@ -1,0 +1,13 @@
+[Unit]
+Description=DCP Remote Data Service
+
+[Service]
+Type=simple
+User=dcp-rds
+Group=dcp-rds
+Environment=NODE_OPTIONS=--max-old-space-size=8192
+WorkingDirectory=/var/dcp-rds/
+ExecStart=/var/dcp-rds/bin/dcp-rds-httpd
+KillSignal=2
+Restart=always
+RemainAfterExit=no

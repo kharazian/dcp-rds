@@ -14,21 +14,24 @@
   </head>
   <body onload="module.main.init()">
     <h3>This page lets you upload one element of the input set</h3>
-    <form action="/methods/upload" method="post">
+    <form action="/methods/upload" method="post" target="output">
       <p><label><span>job identifier:     </span><input type=text name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text name="element"></label> (optional)</p>
-      <p><label><span>element type:       </span><select          name="elementType"></label></p>
+      <p><label><span>element type:       </span><select          name="elementType"></select></label></p>
       <p><label><span>content:            </span><textarea        name="content"></textarea></p>
       <p><label><span>content type:       </span><select          name="contentType"></select> <button>Upload</button></p>
     </form>
     <br><br>
-    <form action="/methods/upload" method="post" enctype="multipart/form-data">
+    <form action="/methods/upload" method="post" enctype="multipart/form-data" target="output">
       <p><label><span>job identifier:     </span><input type=text name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text name="element"></label> (optional)</p>
-      <p><label><span>element type:       </span><select          name="elementType"></label></p>
+      <p><label><span>element type:       </span><select          name="elementType"></select></label></p>
       <p><label><span>content:            </span><input type=file name="content"></p>
       <p><label><span>content type:       </span><select          name="contentType"></select> <button>Upload</button></p>
     </form>
+    <br><br>
+    Response:<br>
+    <iframe name="output" width="80%"></iframe>
   </body>
   <script>'use strict';
 /** Main Module */
@@ -61,7 +64,7 @@ module.declare([], function(require, exports, module)
     }
 
     /* Append <inherit from file> content type to select elements in forms with file upload capability */
-    els = document.querySelector('FORM[enctype="multipart/form-data"] SELECT');
+    els = document.querySelectorAll('FORM[enctype="multipart/form-data"] SELECT[name="contentType"]');
     for (let el of els)
     {
       let option = new Option('<inherit from file>', '');
