@@ -136,7 +136,8 @@ async function handleRequest(request, response, requestBody)
 
   var responseBody = { success: false };
   var responseBodyStr;
-  
+  var ipAddressStr = logging.ipAddress(request.headers, request.socket.address().address);
+
   setCorsHeaders(response);
 
   try
@@ -211,7 +212,7 @@ async function handleRequest(request, response, requestBody)
   }
 
   response.setHeader('content-type', 'application/json');
-  console.log(request.method, utils.getRequestUrl(request).href, response.statusCode, responseBodyStr.length);
+  console.log(ipAddressStr, request.method, utils.getRequestUrl(request).href, response.statusCode, responseBodyStr.length);
   response.end(responseBodyStr);
 }
 
