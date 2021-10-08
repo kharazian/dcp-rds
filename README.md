@@ -195,7 +195,7 @@ sequenceDiagram
 participant client
 participant scheduler
 participant worker
-participant sliceeDataServer
+participant sliceDataServer
 participant workFunctionServer
 participant argumentServer
 participant resultStorageServer
