@@ -14,7 +14,7 @@
   <body onload="init()">
     <h3>This page lets you upload one element of the input set</h3>
     <p>Endpoint: <input id="endpoint" size=40 value=""></p>
-    <form method="post" target="output">
+    <form method="post" target="output" onsubmit='wipeIframe();'>
       <p><label><span>job identifier:     </span><input type=text name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text name="element"></label> (optional)</p>
       <p><label><span>element type:       </span><select          name="elementType"></select></label></p>
@@ -22,7 +22,7 @@
       <p><label><span>content type:       </span><select          name="contentType"></select> <button>Upload</button></p>
     </form>
     <br><br>
-    <form method="post" enctype="multipart/form-data" target="output">
+    <form method="post" enctype="multipart/form-data" target="output" onsubmit='wipeIframe();'>
       <p><label><span>job identifier:     </span><input type=text name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text name="element"></label> (optional)</p>
       <p><label><span>element type:       </span><select          name="elementType"></select></label></p>
@@ -42,7 +42,11 @@ function updateFormActions()
   for (let el of els)
     el.action = document.getElementById('endpoint').value;
 }
-    
+
+function wipeIframe()
+{
+  document.getElementsByTagName('IFRAME')[0].src = 'about:blank';
+}
 /** Main Program Entrypoint */
 function init()
 {

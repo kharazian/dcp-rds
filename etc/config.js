@@ -11,11 +11,11 @@
 
 const path = require('path');
 
-exports.debug      = false;
-exports.mode       = 'release';
-exports.listen     = new URL('http://localhost:3521/');
-exports.storageDir = path.resolve(path.dirname(require.main.filename), '../storage');
-//exports.origin     = new URL('http://mysite.com/');
+exports.debug           = false;
+exports.mode            = 'release';
+exports.listen          = new URL('http://localhost:3521/methods');
+exports.location        = exports.listen;
+exports.storageDir      = path.resolve(path.dirname(require.main.filename), '../storage');
 
 /************ load in a local config, if present, which can override properties in this file ************/
 try

@@ -27,7 +27,7 @@ const libexecRequire = (moduleSystem.createRequireFromPath || moduleSystem.creat
 const methodNameRE   = /^[-_a-z0-9]+$/i   /* Method names must match this regex */
 
 /** 
- * Define the CORS headers for all responses. Special use-cases can be addressed in the config module. 
+ * Define the CORS headers for all responses. Special use-cases can be addressed in the config module.
  */
 const corsHeaders = {
   'access-control-allow-origin':  '*',
@@ -134,16 +134,26 @@ async function handleRequest(request, response, requestBody)
       response.setHeader(header, corsHeaders[header]);
   }
 
-  var rb, responseBody = { success: false };
-
-  (config.debug) && console.debug(request.method, utils.getRequestUrl(request).href);
+  var responseBody = { success: false };
+  var responseBodyStr;
+  
   setCorsHeaders(response);
 
   try
   {
-    const methodModule = getMethodModule_byRequest(request);
+    const pathSuffix = request.url.slice(config.listen.pathname.length);
     let query = false;
+    let methodModule;
 
+    if (request.url.startsWith(config.listen.pathname))
+      methodModule = getMethodModule_byRequest(request);
+    else
+    {
+      response.statusCode = 404;
+      response.statusMessage = 'Not found';
+      methodModule = null;
+    }
+    
     switch(request.method.toLowerCase())
     {
       case 'options':
@@ -163,21 +173,22 @@ async function handleRequest(request, response, requestBody)
         throw new Error('Invalid request method ', request.method);
     }
 
-    if (!request.url.startsWith(config.listen.pathname))
-      rb = { error: new Error(`invalid request url: ${request.url} (not in ${config.listen.pathname})`, 'INVALID_URL') }
-    else
-      rb = await methodModule.entrypoint(request, response, query);
-
-    if (rb === false) /* method has already handled the request itself */
-      return;
-    
-    Object.assign(responseBody, rb);
-    if (rb.error instanceof Error)
+    if (methodModule)
     {
-      responseBody.message = rb.error.message;
-      responseBody.name    = rb.error.name;
-      responseBody.stack   = rb.error.stack;
+      const rb = await methodModule.entrypoint(request, response, query, pathSuffix);
+      if (rb === false) /* method has already handled the request itself */
+        return;
+      Object.assign(responseBody, rb);
+    
+      if (rb.error instanceof Error)
+      {
+        responseBody.message = rb.error.message;
+        responseBody.name    = rb.error.name;
+        responseBody.stack   = rb.error.stack;
+      }
     }
+
+    responseBodyStr = JSON.stringify(responseBody);
   }
   catch(e)
   {
@@ -191,6 +202,7 @@ async function handleRequest(request, response, requestBody)
       error.stack   = e.stack;
 
       responseBody.error = error;
+      responseBodyStr = JSON.stringify(responseBody);
     }
     catch(e)
     {
@@ -199,7 +211,8 @@ async function handleRequest(request, response, requestBody)
   }
 
   response.setHeader('content-type', 'application/json');
-  response.end(JSON.stringify(responseBody));
+  console.log(request.method, utils.getRequestUrl(request).href, response.statusCode, responseBodyStr.length);
+  response.end(responseBodyStr);
 }
 
 /**
@@ -237,7 +250,9 @@ async function decodeRequest_post(request)
   var requestBody = await assemblePostData(request);
   
   if (!request.headers['content-type'].startsWith('multipart/form-data'))
+  {
     postData = querystring.parse(requestBody.toString('utf-8'));
+  }
   else
   {
     /* Synthesize our querystring from multipart/formdata. Any uploaded file becomes a buffer */

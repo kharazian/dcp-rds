@@ -6,12 +6,12 @@
  */
 'use strict';
 
+const path   = require('path');
 const utils  = require('../lib/utils');
 const config = require('../etc/config');
 
 const { Error } = require('../lib/error');
 const pathnameReEsc = config.location.pathname.replace(/([.])/g, '\\$1');
-const rUrlComponentsRE = new RegExp(`(^${pathnameReEsc}/download/)([a-z]*)/([^/]*)/([^/]*)/([^/]*)`);
 
 /**
  * Method entrypoint - retrieve content from the disk and send out via the response.
@@ -25,6 +25,7 @@ const rUrlComponentsRE = new RegExp(`(^${pathnameReEsc}/download/)([a-z]*)/([^/]
  *                                      job             unique identifier for the job
  *                                      element         unique identifier for the element
  *                                      elementType     the type of element (eg slice, argument, result)
+ * @param {string} pathSuffix   The pathname components after the method name on the request uri (if any)
  *
  * @returns {object} An object, which is sent back with the response in JSON, with the following properties:
  *                      success {boolean}       true if successful, false if error
@@ -32,22 +33,23 @@ const rUrlComponentsRE = new RegExp(`(^${pathnameReEsc}/download/)([a-z]*)/([^/]
  *                      error   {object}        optional instance of Error. If present, may have also have non-standard 
  *                                              stack and code properties.
  */
-async function download(request, response, query)
+async function download(request, response, query, pathSuffix)
 {
-  var rUrl = utils.getRequestUrl(request);
-  var rUrlComponents = rUrl.pathname.match(rUrlComponentsRE);
+  var pathSuffixComponents = (pathSuffix || '').split('/');
 
-  if (!rUrlComponents || rUrlComponents.length !== 6)
-    throw new Error(`Could not parse URL components of ${rUrl && rUrl.href}`, 'BAD_REQUEST_URL');
+  if (!pathSuffixComponents || pathSuffixComponents.length !== 5)
+    throw new Error(`Could not parse URL components of ${request.url} (${pathSuffix})`, 'BAD_REQUEST_URL');
   
-  var job         = decodeURI(rUrlComponents[3]);
-  var elementType = decodeURI(rUrlComponents[4]);
-  var element     = decodeURI(rUrlComponents[5]);
+  var job         = decodeURI(pathSuffixComponents[2]);
+  var elementType = decodeURI(pathSuffixComponents[3]);
+  var element     = decodeURI(pathSuffixComponents[4]);
 
-  if (rUrlComponents[2] !== 'jobs')
-    throw new Error(`invalid download type '${rUrlComponents[2]}'`);
+  if (pathSuffixComponents[0] !== path.basename(__filename, '.js'))
+    throw new Error(`invalid server configuration; download method named ${pathSuffixComponents[0]}`);
+  if (pathSuffixComponents[1] !== 'jobs')
+    throw new Error(`invalid download type '${pathSuffixComponents[1]}'`);
 
-  utils.sendContent(response, job, 'slice', element);
+  utils.sendContent(response, job, elementType, element);
   return false;
 }
 
