@@ -35,8 +35,7 @@ async function upload(request, response, query)
   var elementType = query.elementType;
   var content     = query.content;
   var contentType = query.contentType;
-  var origin      = config.origin || utils.getRequestUrl(request).origin;
-  var href        = `${origin}/methods/download/jobs/${job}/${elementType}/${element}`;
+  var href        = `${utils.getLocation(request)}/download/jobs/${job}/${elementType}/${element}`;
 
   if (!Object.hasOwnProperty.call(query, 'content'))
     throw new Error('query missing content');
