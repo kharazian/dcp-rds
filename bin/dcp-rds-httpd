@@ -142,9 +142,11 @@ async function handleRequest(request, response, requestBody)
 
   try
   {
-    const pathSuffix = request.url.slice(config.listen.pathname.length);
     let query = false;
     let methodModule;
+
+    request.url = request.url.replace(/\/\//g, '/');
+    const pathSuffix = request.url.slice(config.listen.pathname.length);
 
     if (request.url.startsWith(config.listen.pathname))
       methodModule = getMethodModule_byRequest(request);
