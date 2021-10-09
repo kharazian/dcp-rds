@@ -5,7 +5,7 @@ This is the official reference implementation of a DCP Remote Data Service.  Whi
 ## Record Of Issue
 | Date       | Author              | Change
 :----------- |:------------------- |:---------------------------------------------
-| Oct 7 2021 | Wes Garland         | Initial Release
+| Oct 8 2021 | Wes Garland         | Initial Release
 
 ## Legal (MIT License)
 Copyright (c) 2021 Kings Distributed Systems, Ltd.
@@ -15,6 +15,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### Icon
+The "Pizza Slice" icon associated with but not part of dcp-rds was made by [turkkub](https://www.flaticon.com/authors/turkkub) from [Flaticon](https://www.flaticon.com).
 
 ## About
 DCP allows software developer who write DCP Client Applications to map an input set to an output set via a work function and a work argument.  The typical data flow has the client sending the input set, work function, and work argument to the centralized scheduler, which mediates all communication with the workers.  A DCP Remote Service provides a mechanism for clients and workers to communicate directly with data sources or sinks.
