@@ -107,7 +107,16 @@ function getMethodModule(methodName, recursionDepth)
  */
 function getMethodModule_byRequest(request)
 {
-  const methodName = request.url.slice(config.listen.pathname.length).replace(/\?.*/,'').replace(/\/.*$/, '');
+  let methodName = request.url.slice(config.listen.pathname.length);
+
+  // Make sure methodName does not start with '/' or '?'
+  // Would prefer to combine this with below regexp step.
+  if (methodName.length > 0 && (methodName[0] == '/' || methodName[0] == '?'))
+    methodName = methodName.slice(1);
+
+  // replace(/\?.*/,'') -- removes the first '?' and everything after.
+  // Both replace(/\/.*/,'') and replace(/\/.*$/,'') -- remove the first '/' and everything after.
+  methodName = methodName.replace(/\?.*/,'').replace(/\/.*$/, '');
 
   return getMethodModule(methodName);
 }
@@ -145,6 +154,7 @@ async function handleRequest(request, response, requestBody)
     let query = false;
     let methodModule;
 
+    // For every '//' replace with '/' .
     request.url = request.url.replace(/\/\//g, '/');
     const pathSuffix = request.url.slice(config.listen.pathname.length);
 
