@@ -39,10 +39,12 @@ async function download(request, response, query, pathSuffix)
 
   if (!pathSuffixComponents || pathSuffixComponents.length !== 5)
     throw new Error(`Could not parse URL components of ${request.url} (${pathSuffix})`, 'BAD_REQUEST_URL');
-  
+
   var job         = decodeURI(pathSuffixComponents[2]);
   var elementType = decodeURI(pathSuffixComponents[3]);
   var element     = decodeURI(pathSuffixComponents[4]);
+
+  //console.log('dcp-rds:utils:download', pathSuffixComponents);
 
   if (pathSuffixComponents[0] !== path.basename(__filename, '.js'))
     throw new Error(`invalid server configuration; download method named ${pathSuffixComponents[0]}`);

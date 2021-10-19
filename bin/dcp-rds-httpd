@@ -156,7 +156,10 @@ async function handleRequest(request, response, requestBody)
 
     // For every '//' replace with '/' .
     request.url = request.url.replace(/\/\//g, '/');
-    const pathSuffix = request.url.slice(config.listen.pathname.length);
+    let pathSuffix = request.url.slice(config.listen.pathname.length);
+    // Make sure methodName does not start with '/' or '?'
+    if (pathSuffix && pathSuffix.length > 0 && (pathSuffix[0] === '/' || pathSuffix[0] === '&'))
+      pathSuffix = pathSuffix.slice(1);
 
     if (request.url.startsWith(config.listen.pathname))
       methodModule = getMethodModule_byRequest(request);
