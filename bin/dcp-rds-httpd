@@ -156,6 +156,7 @@ async function handleRequest(request, response, requestBody)
 
     // For every '//' replace with '/' .
     request.url = request.url.replace(/\/\//g, '/');
+
     let pathSuffix = request.url.slice(config.listen.pathname.length);
     // Make sure methodName does not start with '/' or '?'
     if (pathSuffix && pathSuffix.length > 0 && (pathSuffix[0] === '/' || pathSuffix[0] === '&'))
