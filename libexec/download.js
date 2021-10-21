@@ -44,8 +44,6 @@ async function download(request, response, query, pathSuffix)
   var elementType = decodeURI(pathSuffixComponents[3]);
   var element     = decodeURI(pathSuffixComponents[4]);
 
-  //console.log('dcp-rds:utils:download', pathSuffixComponents);
-
   if (pathSuffixComponents[0] !== path.basename(__filename, '.js'))
     throw new Error(`invalid server configuration; download method named ${pathSuffixComponents[0]}`);
   if (pathSuffixComponents[1] !== 'jobs')
