@@ -39,7 +39,7 @@ async function download(request, response, query, pathSuffix)
 
   if (!pathSuffixComponents || pathSuffixComponents.length !== 5)
     throw new Error(`Could not parse URL components of ${request.url} (${pathSuffix})`, 'BAD_REQUEST_URL');
-
+    
   var job         = decodeURI(pathSuffixComponents[2]);
   var elementType = decodeURI(pathSuffixComponents[3]);
   var element     = decodeURI(pathSuffixComponents[4]);
