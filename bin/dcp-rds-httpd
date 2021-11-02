@@ -109,10 +109,10 @@ function getMethodModule_byRequest(request)
 {
   let methodName = request.url.slice(config.listen.pathname.length);
 
-  // Make sure methodName does not start with '/' or '?'
+  // Make sure methodName does not start with '/'.
   // Would prefer to combine this with below regexp step.
-  if (methodName.length > 0 && (methodName[0] == '/' || methodName[0] == '?'))
-    methodName = methodName.slice(1);
+  if (methodName.length > 0 && methodName[0] == '/')
+      methodName = methodName.slice(1);
 
   // replace(/\?.*/,'') -- removes the first '?' and everything after.
   // Both replace(/\/.*/,'') and replace(/\/.*$/,'') -- remove the first '/' and everything after.
@@ -158,15 +158,15 @@ async function handleRequest(request, response, requestBody)
     request.url = request.url.replace(/\/\//g, '/');
 
     let pathSuffix = request.url.slice(config.listen.pathname.length);
-    // Make sure pathSuffix does not start with '/' or '?' or end with '/' .
+    // Make sure pathSuffix does not start with or end with '/' .
     if (pathSuffix && pathSuffix.length > 0) {
-      if (pathSuffix[0] === '/' || pathSuffix[0] === '&') {
-        if (pathSuffix[pathSuffix.length - 1] === '/')
+      if (pathSuffix[pathSuffix.length - 1] === '/') {
+        if (pathSuffix[0] === '/')
           pathSuffix = pathSuffix.slice(1, pathSuffix.length - 1);
         else
-          pathSuffix = pathSuffix.slice(1, pathSuffix.length);
-      } else if (pathSuffix[pathSuffix.length - 1] === '/') {
-        pathSuffix = pathSuffix.slice(0, pathSuffix.length - 1);
+          pathSuffix = pathSuffix.slice(0, pathSuffix.length - 1);
+      } else if (pathSuffix[0] === '/') {
+        pathSuffix = pathSuffix.slice(1, pathSuffix.length);
       }
     }
 

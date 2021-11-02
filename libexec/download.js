@@ -37,9 +37,10 @@ async function download(request, response, query, pathSuffix)
 {
   var pathSuffixComponents = (pathSuffix || '').split('/');
 
+  //console.log('dcp-rds:utils:download', pathSuffixComponents);
   if (!pathSuffixComponents || pathSuffixComponents.length !== 5)
     throw new Error(`Could not parse URL components of ${request.url} (${pathSuffix})`, 'BAD_REQUEST_URL');
-  
+
   var job         = decodeURI(pathSuffixComponents[2]);
   var elementType = decodeURI(pathSuffixComponents[3]);
   var element     = decodeURI(pathSuffixComponents[4]);
@@ -48,6 +49,10 @@ async function download(request, response, query, pathSuffix)
     throw new Error(`invalid server configuration; download method named ${pathSuffixComponents[0]}`);
   if (pathSuffixComponents[1] !== 'jobs')
     throw new Error(`invalid download type '${pathSuffixComponents[1]}'`);
+
+  //console.log('\ndcp-rds:utils:download-response', utils.stringify(response));
+  //console.log('\ndcp-rds:utils:download-request', utils.stringify(request));
+  //console.log('\ndcp-rds:utils:download-query', utils.stringify(query));
 
   utils.sendContent(response, job, elementType, element);
   return false;

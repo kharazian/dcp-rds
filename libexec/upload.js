@@ -37,6 +37,7 @@ async function upload(request, response, query)
   var contentType = query.contentType;
   var href        = `${utils.getLocation(request)}/download/jobs/${job}/${elementType}/${element}`;
 
+  //console.log(`dcp-rds:utils:upload query ${utils.stringify(query)}\n`);
   if (!Object.hasOwnProperty.call(query, 'content'))
     throw new Error('query missing content');
 
