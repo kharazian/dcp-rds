@@ -35,7 +35,8 @@ async function upload(request, response, query)
   var elementType = query.elementType;
   var content     = query.content;
   var contentType = query.contentType;
-  var href        = `${utils.getLocation(request)}/download/jobs/${job}/${elementType}/${element}`;
+  var location = utils.getLocation(request);
+  var href        = `${location.protocol}//${location.host}/methods/download/jobs/${job}/${elementType}/${element}`;
 
   //console.log(`dcp-rds:utils:upload query ${utils.stringify(query)}\n`);
   if (!Object.hasOwnProperty.call(query, 'content'))
