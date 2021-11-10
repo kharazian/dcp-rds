@@ -19,9 +19,8 @@ async function result(request, response, query)
   var elementType = query.elementType || '"result"';
   elementType = JSON.parse(elementType);
   var content     = query.content || query[elementType] || null;
-  content = JSON.parse(content);
   var contentType = query.contentType;
-  content = JSON.parse(contentType);
+  contentType = JSON.parse(contentType);
   var location = utils.getLocation(request);
   var href        = `${location.protocol}//${location.host}/methods/download/jobs/${jobId}/${elementType}/${element}`;
 
