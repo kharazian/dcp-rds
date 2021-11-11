@@ -1,6 +1,6 @@
 {
   "name": "dcp-rds",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "DCP Remote Data Service reference implementation",
   "scripts": {
     "postinstall": "npx ./npm/postinstall.js",

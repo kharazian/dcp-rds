@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 The "Pizza Slice" icon associated with but not part of dcp-rds was made by [turkkub](https://www.flaticon.com/authors/turkkub) from [Flaticon](https://www.flaticon.com).
 
 ## About
-DCP allows software developer who write DCP Client Applications to map an input set to an output set via a work function and a work argument.  The typical data flow has the client sending the input set, work function, and work argument to the centralized scheduler, which mediates all communication with the workers.  A DCP Remote Service provides a mechanism for clients and workers to communicate directly with data sources or sinks.
+DCP allows software developers who write DCP Client Applications to map an input set to an output set via a work function and a work argument.  The typical data flow has the client sending the input set, work function, and work argument to the centralized scheduler, which mediates all communication with the workers.  A DCP Remote Service provides a mechanism for clients and workers to communicate directly with data sources or sinks.
  
 A DCP Remote Data Service consists of two parts,
  1. a program which can receive data from a remote entity, and
