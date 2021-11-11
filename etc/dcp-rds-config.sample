@@ -1,0 +1,8 @@
+/**
+ * DCP Remote Data Service - local configuration.
+ */
+//exports.debug           = false;
+//exports.mode            = 'release';
+//exports.listen          = new URL('http://localhost:3521/methods');
+//exports.location        = new URL('https://my-webserver.com/dcp-rds/methods');
+//exports.storageDir      = '/path/to/storage';

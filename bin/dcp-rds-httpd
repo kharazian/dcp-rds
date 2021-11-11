@@ -11,6 +11,7 @@
  */
 'use strict';
 
+const config            = require('../etc/config.js');
 const http              = require('http');
 const path              = require('path');
 const moduleSystem      = require('module');
@@ -19,7 +20,6 @@ const querystring       = require('querystring');
 const multipartFormdata = require('multipart-formdata');
 const logging           = require('../lib/logging');
 const utils             = require('../lib/utils');
-const config            = require('../etc/config.js');
 
 const { Error }      = require('../lib/error');
 const programPath    = path.dirname(require.main.filename);
