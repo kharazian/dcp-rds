@@ -167,6 +167,21 @@ sudo systemctl restart dcp-rds
 
 #### nginx Integration
 
+```
+  location /dcp-rds/methods {
+    proxy_set_header X-Proxy-Scheme $scheme;
+    proxy_set_header X-Proxy-Host $http_host;
+    proxy_set_header X-Proxy-Request-Uri $request_uri;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_pass http://localhost:3521/methods;
+  }
+
+  location ~* /dcp-rds/browser-test {
+    root /var/dcp-rds/lib/node_modules/;
+    try_files $uri =404;
+  }
+```
+
 #### Apache Integration
 
 - now edit apache confs
