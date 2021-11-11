@@ -9,7 +9,6 @@
     <meta charset="utf-8">
     <title>DCP remote data service test: upload</title>
     <link rel="stylesheet" href="style.css">
-    <base href="http://localhost:3521/">
   </head>
   <body onload="init()">
     <h3>This page lets you upload one element of the input set</h3>
@@ -36,9 +35,7 @@
   <script>'use strict';
 function updateFormActions()
 {
-  var els;
-  console.log('updaying');
-  els = document.querySelectorAll('FORM');
+  var els = document.querySelectorAll('FORM');
   for (let el of els)
     el.action = document.getElementById('endpoint').value;
 }
@@ -47,14 +44,22 @@ function wipeIframe()
 {
   document.getElementsByTagName('IFRAME')[0].src = 'about:blank';
 }
+
 /** Main Program Entrypoint */
 function init()
 {
   var els, ep;
+  var myLocation = new URL(window.location.href);
+  var rdsBase;
+
+  if (myLocation.protocol === 'file:')
+    rdsBase = 'http://localhost:3521/';
+  else
+    rdsBase = myLocation.origin + myLocation.pathname.replace('browser-test/upload.html', '');
   
   /* Initialize endpoint based on location of this page */
   ep = document.querySelector('INPUT#endpoint');
-  ep.value = document.baseURI + 'methods/upload';
+  ep.value = rdsBase + 'methods/upload';
   ep.addEventListener('change', updateFormActions);
   updateFormActions();
   
