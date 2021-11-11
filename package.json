@@ -36,7 +36,6 @@
     "npm"
   ],
   "dependencies": {
-    "access-log": "^0.4.1",
     "kvin": "^1.2.5",
     "multipart-formdata": "^1.1.0",
     "nanoid": "^3.1.29"
