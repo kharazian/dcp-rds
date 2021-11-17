@@ -36,10 +36,10 @@ async function upload(request, response, query)
   var content     = query.content;
   var contentType = query.contentType;
   var location    = utils.getLocation(request);
-  var methodPath  = location.pathname.replace(/\/upload$/, '');
+  var methodPath  = location.pathname.replace(/\/upload.*$/, '');
   var href        = `${location.protocol}//${location.host}${methodPath}/download/jobs/${job}/${elementType}/${element}`;
 
-  //console.log(`dcp-rds:utils:upload query ${utils.stringify(query)}\n`);
+  //console.log(`\ndcp-rds:utils:upload query ${utils.stringify(query)}\n`);
   if (!Object.hasOwnProperty.call(query, 'content'))
     throw new Error('query missing content');
 

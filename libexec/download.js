@@ -37,7 +37,8 @@ async function download(request, response, query, pathSuffix)
 {
   var pathSuffixComponents = (pathSuffix || '').split('/');
 
-  //console.log('dcp-rds:utils:download', pathSuffixComponents);
+  //console.log('\ndcp-rds:utils:download', pathSuffixComponents);
+
   if (!pathSuffixComponents || pathSuffixComponents.length !== 5)
     throw new Error(`Could not parse URL components of ${request.url} (${pathSuffix})`, 'BAD_REQUEST_URL');
 
