@@ -51,6 +51,9 @@ function getMethodModule(methodName, recursionDepth)
   var diskPath;
   var methodCache = getMethodModule.cache; /* holds cached method modules to avoid repeated disk lookups */
 
+  if (!methodNameRE.test(methodName))
+    throw new Error(`Method '${methodName}' is invalid.`, 'INVALID_METHOD');
+
   if (!methodCache)
     methodCache = getMethodModule.cache = {};
   
@@ -80,9 +83,6 @@ function getMethodModule(methodName, recursionDepth)
 
   if (!methodCache[methodName])
   {
-    if (!methodNameRE.test(methodName))
-      throw new Error(`Method '${methodName}' is invalid.`, 'INVALID_METHOD');
-
     diskPath = libexecRequire.resolve(`./${methodName}`);
     config.debug && console.debug('Loading module', diskPath);
 
@@ -109,13 +109,9 @@ function getMethodModule_byRequest(request)
 {
   let methodName = request.url.slice(config.listen.pathname.length);
 
-  // Make sure methodName does not start with '/'.
-  // Would prefer to combine this with below regexp step.
+  /* calculate methodName based on the pathname component of the request URL */
   if (methodName.length > 0 && methodName[0] == '/')
-      methodName = methodName.slice(1);
-
-  // replace(/\?.*/,'') -- removes the first '?' and everything after.
-  // Both replace(/\/.*/,'') and replace(/\/.*$/,'') -- remove the first '/' and everything after.
+    methodName = methodName.slice(1);
   methodName = methodName.replace(/\?.*/,'').replace(/\/.*$/, '');
 
   return getMethodModule(methodName);
@@ -154,11 +150,11 @@ async function handleRequest(request, response, requestBody)
     let query = false;
     let methodModule;
 
-    // For every '//' replace with '/' .
+    /* collapse // to / */
     request.url = request.url.replace(/\/\//g, '/');
 
     let pathSuffix = request.url.slice(config.listen.pathname.length);
-    // Make sure pathSuffix does not start with or end with '/' .
+    /* Ensure pathSuffix does not start with or end with '/' */
     if (pathSuffix && pathSuffix.length > 0) {
       if (pathSuffix[pathSuffix.length - 1] === '/') {
         if (pathSuffix[0] === '/')
