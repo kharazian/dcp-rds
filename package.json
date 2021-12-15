@@ -1,6 +1,6 @@
 {
   "name": "dcp-rds",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "DCP Remote Data Service reference implementation",
   "scripts": {
     "postinstall": "npx ./npm/postinstall.js",
@@ -36,8 +36,8 @@
     "npm"
   ],
   "dependencies": {
-    "kvin": "^1.2.5",
+    "kvin": "^1.2.6",
     "multipart-formdata": "^1.1.0",
-    "nanoid": "^3.1.29"
+    "nanoid": "^3.1.30"
   }
 }
