@@ -29,7 +29,7 @@ console.debug(` - running in ${process.cwd()}`);
 const sampleConfig = path.join(process.cwd(), 'etc', 'dcp-rds-config.sample');
 const niceConfig = path.join(prefix, 'etc', 'dcp-rds-config.js');
 
-console.log(`\nTo complete the install, run the following commands (Ubuntu Linux):`);
+console.log(`\nTo complete the install, customize ${niceConfig}, and integrate the daemon into your system. Here's one way, that works on Ubuntu Linux:`);
 console.log(`\tsudo useradd dcp-rds -d "${storage}" --system`);
 console.log(`\tsudo mkdir "${storage}"`);
 console.log(`\tsudo chown dcp-rds "${storage}"`);
@@ -37,6 +37,5 @@ console.log(`\tsudo mkdir "${path.dirname(niceConfig)}"`);
 console.log(`\tsudo cp --no-clobber "${sampleConfig}" "${niceConfig}"`);
 console.log(`\tsed -e "s;/var/dcp-rds/;${prefix}/;" < "${process.cwd()}/systemctl/dcp-rds.service" | sudo sh -c 'cat > /etc/systemd/system/dcp-rds.service'`);
 console.log('\tsudo systemctl daemon-reload');
-console.log('\ttty >/dev/null || sudo systemctl restart dcp-rds');
-console.log(`\ttty >/dev/null && sudo ${process.env.VISUAL || process.env.EDITOR || 'vi'} ${niceConfig} && sudo systemctl restart dcp-rds`);
+console.log('\tsudo systemctl restart dcp-rds');
 console.log('');

@@ -5,7 +5,8 @@ This is the official reference implementation of a DCP Remote Data Service.  Whi
 ## Record Of Issue
 | Date       | Author              | Change
 :----------- |:------------------- |:---------------------------------------------
-| Oct 8 2021 | Wes Garland         | Initial Release
+| Oct 8 2021 | Wes Garland         | 1.0.3, Initial Release
+| Jan 8 2022 | Wes Garland         | 1.0.6, Documentation changes
 
 ## Legal (MIT License)
 Copyright (c) 2021 Kings Distributed Systems, Ltd.
@@ -143,29 +144,20 @@ DCP workers uses the HTTP content-type header to sort out what kind of serializa
 * nginx or Apache httpd
 * Knowledge of organizational security policies and ability to implement them with Apache or nginx.
 
-### Common
+#### Installation - Standalone Package
 ```bash
 PREFIX="/var/dcp-rds"
-```
-
-#### Package install
-```bash
-sudo useradd -d "${PREFIX}" -M -s /bin/false dcp-rds
-sudo mkdir -p "${PREFIX}" 
-sudo chown dcp-rds:dcp-rds "${PREFIX}"
 sudo npm i dcp-rds --global --prefix="${PREFIX}"
 ```
 
-#### Systemctl Integration
-```bash
-sed -e "s;/var/dcp-rds/;${PREFIX}/;" \
-< "${PREFIX}/systemctl/dcp-rds.service" \
-| sudo sh -c 'cat > /etc/systemd/system/dcp-rds.service'
-sudo systemctl daemon-reload
-sudo systemctl restart dcp-rds
-```
+Once the package has been installed, you will need it to integrate it with whatever security scheme, process monitor and web servers you are running locally.
+The script will display one way of doing this with Ubuntu Linux when it finishes running.
 
-#### nginx Integration
+##### systemctl Integration
+A sample systemctl configuration is stored in ${PREFIX}/systemctl
+
+##### nginx Integration
+Here is one way to integrate with nginx:
 
 ```
   location /dcp-rds/methods {
@@ -183,11 +175,7 @@ sudo systemctl restart dcp-rds
 ```
 
 #### Apache Integration
-
-- now edit apache confs
-- copy systemctl stuff
-- systemctl daemon-reload
-- systemctl start whatever this thing is call
+You'll need to set up a reverse proxy.
 
 ## Appendix A - Manifest
 
