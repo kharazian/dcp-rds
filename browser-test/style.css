@@ -33,6 +33,15 @@ BODY > FORM TEXTAREA
   width: 30em;
 }
 
+TEXTAREA
+{
+  font-family: robot, ubuntu mono, monospace, courier new;
+  font-size: 0.8em;
+  color: black;
+  width: 50em;
+  height: 10em;
+}
+
 BODY > FORM INPUT:read-only,
 BODY > FORM TEXTAREA:read-only
 {

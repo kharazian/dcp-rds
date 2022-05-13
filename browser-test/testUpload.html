@@ -1,0 +1,173 @@
+<!doctype html>
+<!-- @file      browser-test/upload.html
+  --            Web page which allows to exercise the upload method of the remote data service.
+  -- @author    Wes Garland, wes@kingsds.network
+  -- @date      Oct 2021
+  -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DCP remote data service test: upload</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="kvin.js"></script>
+  </head>
+  <body onload="init()">
+    <h3>This page lets you upload one element of the input set</h3>
+    <p>Endpoint: <input id="endpoint" size=40 value=""></p>
+    <form onsubmit='postData(event)'>
+      <p><label><span>job identifier:     </span><input type=text       name="job"></label>     (optional)</p>
+      <p><label><span>element identifier: </span><input type=text       name="element"></label> (optional)</p>
+      <p><label><span>element type:       </span><select                name="elementType"></select></label></p>
+      <p><label><span>content:            </span><textarea              name="content"></textarea></label></p>
+      <p><label><span>content type:       </span><select                name="contentType"></select></label></p>
+      <p><label><span>Upload:             </span><input type="checkbox" name="upload"></label></p>
+      <p><button >Upload</button></p>
+    </form>    
+    <br><br>
+    <form onsubmit='getData(event)'>
+      <p><label><span>result link:        </span><input type=text       name="resultlink"></label>     (optional)</p>
+      </label></p>
+      <p><button >Upload</button></p>
+    </form>    
+    <br><br>
+    Response:<br>
+    <textarea name="output" width="1000em"></textarea>
+  </body>
+  <script>'use strict';
+
+function getData(e)
+{
+  e.preventDefault();
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', document.getElementsByName('resultlink')[0].value, true);
+
+  // xhr.responseType = 'arraybuffer';
+
+  xhr.onload = function(e) {
+    if (this.status == 200) {
+      // alert(KVIN.deserialize(this.response));
+      alert((this.response));
+        var uInt8Array = new Uint8Array(this.response); // Note:not xhr.responseText
+
+        for (var i = 0, len = uInt8Array.length; i < len; ++i) {
+            uInt8Array[i] = this.response[i];
+        }
+
+        var byte3 = uInt8Array[4]; // byte at offset 4
+    }
+  }
+
+  xhr.send();
+
+
+}
+
+function postData(e)
+{
+  e.preventDefault();
+  var output = document.getElementsByName('output')[0];
+  output.value = '#';
+
+  var body = new FormData();
+  var postContentType = '';
+  
+  var job = document.getElementsByName('job')[0];
+  var element = document.getElementsByName('element')[0];
+  var elementType = document.getElementsByName('elementType')[0];
+  var content = document.getElementsByName('content')[0];
+  var contentType = document.getElementsByName('contentType')[0];
+  var upload = document.getElementsByName('upload')[0];
+
+  job.value = upload.checked ? 2 : 1;
+  element.value = contentType.selectedIndex + 1;
+  body = {};
+  body.job = job.value;
+  body.element =  element.value;
+  body.elementType =  elementType.value;
+  body.contentType =  contentType.value;
+  const obj = new Float32Array(content.value.split(','));
+
+  switch (contentType.value) {
+    case 'text/plain':
+      body.content = content.value;
+      break;
+
+    case 'application/json':
+      body.content = JSON.stringify(obj);
+      break;
+
+    case 'application/x-kvin':
+      body.content = KVIN.serialize(obj);      
+      break;
+
+    case 'application/octet-stream':
+      body.content = obj;            
+      break;
+        
+    default:
+      break;
+  }
+
+  var http = new XMLHttpRequest();
+  http.open('POST', document.querySelector('INPUT#endpoint').value, true);
+
+  http.onreadystatechange = function() {//Call a function when the state changes.
+      if(http.readyState == 4 && http.status == 200) {
+        output.value = http.responseText;
+        alert(http.responseText);
+      }
+  }
+
+  if(upload.checked) {
+    var formdata = new FormData();
+    for (const [key, value] of Object.entries(body)) {
+      formdata.append(key, value);
+    }
+    http.send(formdata);
+  }
+  else {
+    http.setRequestHeader('Content-type', 'x-www-form-urlencoded');
+    var str = [];
+    for (const [key, value] of Object.entries(body)) {
+      str.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
+    }
+    http.send(str.join("&"));
+  }
+}
+
+/** Main Program Entrypoint */
+function init()
+{
+  var els, ep;
+  var rdsBase;
+
+  rdsBase = 'http://localhost:3521/';
+
+  ep = document.querySelector('INPUT#endpoint');
+  ep.value = rdsBase + 'methods/upload';
+  
+  /* Append usual list of content type types to each select element */
+  els = document.querySelectorAll('SELECT[name="contentType"]');
+  for (let el of els)
+  {
+    for (let ct of ['text/plain', 'application/json', 'application/x-kvin', 'application/octet-stream'])
+    {
+      let option = new Option(ct);
+      el.options[el.options.length++] = option;
+    }
+  }
+
+  /* Append usual list of element types to each select element */
+  els = document.querySelectorAll('SELECT[name="elementType"]');
+  for (let el of els)
+  {
+    for (let et of ['slice', 'result', 'argument', 'work-function'])
+    {
+      let option = new Option(et);
+      el.options[el.options.length++] = option;
+    }
+  }
+
+}
+  </script>
+</html>

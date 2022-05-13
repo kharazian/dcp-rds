@@ -272,6 +272,7 @@ async function decodeRequest_post(request)
   
   if (!request.headers['content-type'].startsWith('multipart/form-data'))
   {
+    var aa = requestBody.toString('utf-8');
     postData = querystring.parse(requestBody.toString('utf-8'));
   }
   else
