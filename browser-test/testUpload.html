@@ -41,12 +41,14 @@ function getData(e)
   var xhr = new XMLHttpRequest();
   xhr.open('GET', document.getElementsByName('resultlink')[0].value, true);
 
-  // xhr.responseType = 'arraybuffer';
-
   xhr.onload = function(e) {
     if (this.status == 200) {
-      // alert(KVIN.deserialize(this.response));
-      alert((this.response));
+      if(document.getElementsByName('resultlink')[0].value.split('/')[8] == '3') {
+        alert(KVIN.deserialize(this.response));
+      }
+      else {
+        alert((this.response));
+      }
         var uInt8Array = new Uint8Array(this.response); // Note:not xhr.responseText
 
         for (var i = 0, len = uInt8Array.length; i < len; ++i) {

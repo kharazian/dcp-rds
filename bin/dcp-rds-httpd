@@ -17,7 +17,7 @@ const path              = require('path');
 const moduleSystem      = require('module');
 const fs                = require('fs');
 const querystring       = require('querystring');
-const multipartFormdata = require('multipart-formdata');
+const multipartFormdata = require('../lib/multipart-formdata');
 const logging           = require('../lib/logging');
 const utils             = require('../lib/utils');
 
