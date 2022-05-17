@@ -14,7 +14,7 @@
   <body onload="init()">
     <h3>This page lets you upload one element of the input set</h3>
     <p>Endpoint: <input id="endpoint" size=40 value=""></p>
-    <form onsubmit='postData()'>
+    <form onsubmit='postData(event)'>
       <p><label><span>job identifier:     </span><input type=text       name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text       name="element"></label> (optional)</p>
       <p><label><span>element type:       </span><select                name="elementType"></select></label></p>
@@ -24,7 +24,7 @@
       <p><button >Upload</button></p>
     </form>    
     <br><br>
-    <form onsubmit='getData()'>
+    <form onsubmit='getData(event)'>
       <p><label><span>result link:        </span><input type=text       name="resultlink"></label>     (optional)</p>
       </label></p>
       <p><button >Upload</button></p>
@@ -37,6 +37,7 @@
 
 let job = document.getElementsByName('job')[0];
 let element = document.getElementsByName('element')[0];
+let elementType = document.getElementsByName('elementType')[0];
 let content = document.getElementsByName('content')[0];
 let contentType = document.getElementsByName('contentType')[0];
 let resultLink = document.getElementsByName('resultlink')[0];
@@ -48,6 +49,7 @@ function uploadClicked() {
 }
 
 function contentTypeChanged() {
+  job.value = upload.checked ? 2 : 1;
   let obj = {s:1234}
   switch (contentType.value) {
     case 'text/plain':
@@ -74,7 +76,8 @@ function contentTypeChanged() {
       break;
   }
 }
-function getData()
+
+function getData(e)
 {
   e.preventDefault();
   var xhr = new XMLHttpRequest();
@@ -93,10 +96,9 @@ function getData()
 
   xhr.send();
 
-
 }
 
-function postData()
+function postData(e)
 {
   e.preventDefault();
   output.value = '#';
