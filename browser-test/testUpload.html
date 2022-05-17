@@ -85,12 +85,12 @@ function getData(e)
 
   xhr.onload = function(e) {
     if (this.status == 200) {
-      if(resultLink.value.split('/')[8] == '3') {
-        alert(KVIN.deserialize(this.response));
-      }
-      else {
+      // if(resultLink.value.split('/')[8] == '3') {
+      //   alert(KVIN.deserialize(this.response));
+      // }
+      // else {
         alert((this.response));
-      }
+      // }
     }
   }
 
