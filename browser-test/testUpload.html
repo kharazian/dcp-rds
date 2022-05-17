@@ -14,17 +14,17 @@
   <body onload="init()">
     <h3>This page lets you upload one element of the input set</h3>
     <p>Endpoint: <input id="endpoint" size=40 value=""></p>
-    <form onsubmit='postData(event)'>
+    <form onsubmit='postData()'>
       <p><label><span>job identifier:     </span><input type=text       name="job"></label>     (optional)</p>
       <p><label><span>element identifier: </span><input type=text       name="element"></label> (optional)</p>
       <p><label><span>element type:       </span><select                name="elementType"></select></label></p>
       <p><label><span>content:            </span><textarea              name="content"></textarea></label></p>
-      <p><label><span>content type:       </span><select                name="contentType"></select></label></p>
-      <p><label><span>Upload:             </span><input type="checkbox" name="upload"></label></p>
+      <p><label><span>content type:       </span><select  onchange="contentTypeChanged()" name="contentType"></select></label></p>
+      <p><label><span>Upload:             </span><input onclick="uploadClicked()" type="checkbox" name="upload"></label></p>
       <p><button >Upload</button></p>
     </form>    
     <br><br>
-    <form onsubmit='getData(event)'>
+    <form onsubmit='getData()'>
       <p><label><span>result link:        </span><input type=text       name="resultlink"></label>     (optional)</p>
       </label></p>
       <p><button >Upload</button></p>
@@ -35,27 +35,59 @@
   </body>
   <script>'use strict';
 
-function getData(e)
+let job = document.getElementsByName('job')[0];
+let element = document.getElementsByName('element')[0];
+let content = document.getElementsByName('content')[0];
+let contentType = document.getElementsByName('contentType')[0];
+let resultLink = document.getElementsByName('resultlink')[0];
+let output = document.getElementsByName('output')[0];
+let upload = document.getElementsByName('upload')[0];
+  
+function uploadClicked() {
+  job.value = upload.checked ? 2 : 1;
+}
+
+function contentTypeChanged() {
+  let obj = {s:1234}
+  switch (contentType.value) {
+    case 'text/plain':
+      content.value = "Hello World!";
+      element.value = 1;
+      break;
+
+    case 'application/json':
+      content.value = JSON.stringify(obj);
+      element.value = 2;
+      break;
+
+    case 'application/x-kvin':
+      content.value = KVIN.serialize(obj);   
+      element.value = 3;
+      break;
+
+    case 'application/octet-stream':
+      content.value = new Float32Array([1.2]);
+      element.value = 4;
+      break;
+        
+    default:
+      break;
+  }
+}
+function getData()
 {
   e.preventDefault();
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', document.getElementsByName('resultlink')[0].value, true);
+  xhr.open('GET', resultLink.value, true);
 
   xhr.onload = function(e) {
     if (this.status == 200) {
-      if(document.getElementsByName('resultlink')[0].value.split('/')[8] == '3') {
+      if(resultLink.value.split('/')[8] == '3') {
         alert(KVIN.deserialize(this.response));
       }
       else {
         alert((this.response));
       }
-        var uInt8Array = new Uint8Array(this.response); // Note:not xhr.responseText
-
-        for (var i = 0, len = uInt8Array.length; i < len; ++i) {
-            uInt8Array[i] = this.response[i];
-        }
-
-        var byte3 = uInt8Array[4]; // byte at offset 4
     }
   }
 
@@ -64,21 +96,13 @@ function getData(e)
 
 }
 
-function postData(e)
+function postData()
 {
   e.preventDefault();
-  var output = document.getElementsByName('output')[0];
   output.value = '#';
 
   var body = new FormData();
   var postContentType = '';
-  
-  var job = document.getElementsByName('job')[0];
-  var element = document.getElementsByName('element')[0];
-  var elementType = document.getElementsByName('elementType')[0];
-  var content = document.getElementsByName('content')[0];
-  var contentType = document.getElementsByName('contentType')[0];
-  var upload = document.getElementsByName('upload')[0];
 
   job.value = upload.checked ? 2 : 1;
   element.value = contentType.selectedIndex + 1;
@@ -87,37 +111,18 @@ function postData(e)
   body.element =  element.value;
   body.elementType =  elementType.value;
   body.contentType =  contentType.value;
-  const obj = new Float32Array(content.value.split(','));
+  body.content = content.value;
 
-  switch (contentType.value) {
-    case 'text/plain':
-      body.content = content.value;
-      break;
 
-    case 'application/json':
-      body.content = JSON.stringify(obj);
-      break;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', document.querySelector('INPUT#endpoint').value, true);
 
-    case 'application/x-kvin':
-      body.content = KVIN.serialize(obj);      
-      break;
-
-    case 'application/octet-stream':
-      body.content = obj;            
-      break;
-        
-    default:
-      break;
-  }
-
-  var http = new XMLHttpRequest();
-  http.open('POST', document.querySelector('INPUT#endpoint').value, true);
-
-  http.onreadystatechange = function() {//Call a function when the state changes.
-      if(http.readyState == 4 && http.status == 200) {
-        output.value = http.responseText;
-        alert(http.responseText);
-      }
+  xhr.onreadystatechange = function() {//Call a function when the state changes.
+    if(xhr.readyState == 4 && xhr.status == 200) {
+      output.value = xhr.responseText;
+      resultLink.value = JSON.parse(xhr.responseText).href;
+      alert(JSON.parse(xhr.responseText).href);
+    }
   }
 
   if(upload.checked) {
@@ -125,15 +130,13 @@ function postData(e)
     for (const [key, value] of Object.entries(body)) {
       formdata.append(key, value);
     }
-    http.send(formdata);
+    xhr.send(formdata);
   }
   else {
-    http.setRequestHeader('Content-type', 'x-www-form-urlencoded');
-    var str = [];
-    for (const [key, value] of Object.entries(body)) {
-      str.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
-    }
-    http.send(str.join("&"));
+    xhr.setRequestHeader('Content-type', 'x-www-form-urlencoded');
+    let entries = Object.entries(body);
+    body = entries.map((kvp) => `${encodeURIComponent(kvp[0])}=${encodeURIComponent(kvp[1])}`).join('&');
+    xhr.send(body);
   }
 }
 
@@ -170,6 +173,8 @@ function init()
     }
   }
 
+  uploadClicked();
+  contentTypeChanged();
 }
   </script>
 </html>
